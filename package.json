@@ -1,0 +1,22 @@
+{
+  "name": "im_token",
+  "version": "1.0.0",
+  "description": "The ITM smart contract",
+  "main": "truffle-config.js",
+  "directories": {
+    "test": "test"
+  },
+  "scripts": {
+    "test": "export NODE_ENV=test && mocha"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/imgroup-vn/imt-smart-contract.git"
+  },
+  "author": "samuraitruong, cashelnguyen, imgropup",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/imgroup-vn/imt-smart-contract/issues"
+  },
+  "homepage": "https://github.com/imgroup-vn/imt-smart-contract#readme"
+}
