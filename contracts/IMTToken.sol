@@ -1,7 +1,10 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.10;
+import "./IBEP20.sol";
+import "./Ownable.sol";
+import "./Stakeable.sol";
 
-contract IMTToken {
+contract IMTToken is Ownable, Stakeable {
   // address public owner = msg.sender;
   uint public last_completed_migration;
 
@@ -9,6 +12,7 @@ contract IMTToken {
   * @notice Our Tokens required variables that are needed to operate everything
   */
   uint private _totalSupply;
+  uint private _totalSold;
   uint8 private _decimals;
   string private _symbol;
   string private _name;
@@ -77,7 +81,7 @@ contract IMTToken {
 
   modifier restricted() {
     require(
-      msg.sender == owner,
+      msg.sender == owner(),
       "This function is restricted to the contract's owner"
     );
     _;
@@ -95,6 +99,7 @@ contract IMTToken {
         require(numTokens <= _balances[msg.sender]);
         _balances[msg.sender] = _balances[msg.sender] - numTokens;
         _balances[receiver] = _balances[receiver] - numTokens;
+        _totalSold = _totalSold + numTokens;
         emit Transfer(msg.sender, receiver, numTokens);
         return true;
     }
@@ -119,6 +124,68 @@ contract IMTToken {
         emit Transfer(owner, buyer, numTokens);
         return true;
     }
+    /**
+  * @notice _mint will create tokens on the address inputted and then increase the total supply
+  *
+  * It will also emit an Transfer event, with sender set to zero address (adress(0))
+  * 
+  * Requires that the address that is recieveing the tokens is not zero address
+  */
+  function _mint(address account, uint256 amount) internal {
+    require(account != address(0), "TruongToken: cannot mint to zero address");
+
+    // Increase total supply
+    _totalSupply = _totalSupply + (amount);
+    // Add amount to the account balance using the balance mapping
+    _balances[account] = _balances[account] + amount;
+    // Emit our event to log the action
+    emit Transfer(address(0), account, amount);
+  }
+  /**
+  * @notice _burn will destroy tokens from an address inputted and then decrease total supply
+  * An Transfer event will emit with receiever set to zero address
+  * 
+  * Requires 
+  * - Account cannot be zero
+  * - Account balance has to be bigger or equal to amount
+  */
+  function _burn(address account, uint256 amount) internal {
+    require(account != address(0), "TruongToken: cannot burn from zero address");
+    require(_balances[account] >= amount, "TruongToken: Cannot burn more than the account owns");
+
+    // Remove the amount from the account balance
+    _balances[account] = _balances[account] - amount;
+    // Decrease totalSupply
+    _totalSupply = _totalSupply - amount;
+    // Emit event, use zero address as reciever
+    emit Transfer(account, address(0), amount);
+  }
+
+  /**
+  * @notice burn is used to destroy tokens on an address
+  * 
+  * See {_burn}
+  * Requires
+  *   - msg.sender must be the token owner
+  *
+   */
+  function burn(address account, uint256 amount) public onlyOwner returns(bool) {
+    _burn(account, amount);
+    return true;
+  }
+
+    /**
+  * @notice mint is used to create tokens and assign them to msg.sender
+  * 
+  * See {_mint}
+  * Requires
+  *   - msg.sender must be the token owner
+  *
+   */
+  function mint(address account, uint256 amount) public onlyOwner returns(bool){
+    _mint(account, amount);
+    return true;
+  }
 
   // function buy() payable public {
   //   uint256 amountTobuy = msg.value;
