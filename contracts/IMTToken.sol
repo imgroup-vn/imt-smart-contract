@@ -2,7 +2,7 @@
 pragma solidity ^0.8.10;
 
 contract IMTToken {
-  address public owner = msg.sender;
+  // address public owner = msg.sender;
   uint public last_completed_migration;
 
   /**
@@ -14,10 +14,12 @@ contract IMTToken {
   string private _name;
 
   /**
-  * @notice _balances is a mapping that contains a address as KEY 
+  * @notice __balances is a mapping that contains a address as KEY 
   * and the balance of the address as the value
   */
   mapping (address => uint256) private _balances;
+
+  mapping(address => mapping (address => uint256)) allowed;
 
   /**
   * @notice Events are created below.
@@ -25,6 +27,9 @@ contract IMTToken {
   *
   */
   event Transfer(address indexed from, address indexed to, uint256 value);
+  event Approval(address indexed owner, address indexed spender, uint256 value);
+  event Bought(uint256 amount);
+  event Sold(uint256 amount);
 
   /**
   * @notice constructor will be triggered when we create the Smart contract
@@ -81,4 +86,55 @@ contract IMTToken {
   function setCompleted(uint completed) public restricted {
     last_completed_migration = completed;
   }
+
+  function balanceOf(address tokenOwner) public  view returns (uint256) {
+        return _balances[tokenOwner];
+    }
+
+    function transfer(address receiver, uint256 numTokens) public  returns (bool) {
+        require(numTokens <= _balances[msg.sender]);
+        _balances[msg.sender] = _balances[msg.sender] - numTokens;
+        _balances[receiver] = _balances[receiver] - numTokens;
+        emit Transfer(msg.sender, receiver, numTokens);
+        return true;
+    }
+
+    function approve(address delegate, uint256 numTokens) public  returns (bool) {
+        allowed[msg.sender][delegate] = numTokens;
+        emit Approval(msg.sender, delegate, numTokens);
+        return true;
+    }
+
+    function allowance(address owner, address delegate) public  view returns (uint) {
+        return allowed[owner][delegate];
+    }
+
+    function transferFrom(address owner, address buyer, uint256 numTokens) public  returns (bool) {
+        require(numTokens <= _balances[owner]);
+        require(numTokens <= allowed[owner][msg.sender]);
+
+        _balances[owner] = _balances[owner] - numTokens;
+        allowed[owner][msg.sender] = allowed[owner][msg.sender] - numTokens;
+        _balances[buyer] = _balances[buyer] + numTokens;
+        emit Transfer(owner, buyer, numTokens);
+        return true;
+    }
+
+  // function buy() payable public {
+  //   uint256 amountTobuy = msg.value;
+  //   uint256 dexBalance = balanceOf(address(this));
+  //   require(amountTobuy > 0, "You need to send some ether");
+  //   require(amountTobuy <= dexBalance, "Not enough tokens in the reserve");
+  //   transfer(msg.sender, amountTobuy);
+  //   emit Bought(amountTobuy);
+  // } 
+
+  // function sell(uint256 amount) public {
+  //         require(amount > 0, "You need to sell at least some tokens");
+  //         uint256 allowance = allowance(msg.sender, address(this));
+  //         require(allowance >= amount, "Check the token allowance");
+  //         transferFrom(msg.sender, address(this), amount);
+  //         msg.sender.transfer(amount);
+  //         emit Sold(amount);
+  // }
 }

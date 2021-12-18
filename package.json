@@ -18,5 +18,8 @@
   "bugs": {
     "url": "https://github.com/imgroup-vn/imt-smart-contract/issues"
   },
-  "homepage": "https://github.com/imgroup-vn/imt-smart-contract#readme"
+  "homepage": "https://github.com/imgroup-vn/imt-smart-contract#readme",
+  "dependencies": {
+    "@truffle/hdwallet-provider": "^2.0.0"
+  }
 }
