@@ -4,7 +4,8 @@ import "./IBEP20.sol";
 import "./Ownable.sol";
 import "./Stakeable.sol";
 
-contract IMTToken is Ownable, Stakeable {
+
+contract IMTToken is Ownable, Stakeable , IBEP20 {
   // address public owner = msg.sender;
   uint public last_completed_migration;
 
@@ -23,15 +24,15 @@ contract IMTToken is Ownable, Stakeable {
   */
   mapping (address => uint256) private _balances;
 
-  mapping(address => mapping (address => uint256)) allowed;
+  mapping(address => mapping (address => uint256)) _allowances;
 
   /**
   * @notice Events are created below.
   * Transfer event is a event that notify the blockchain that a transfer of assets has taken place
   *
   */
-  event Transfer(address indexed from, address indexed to, uint256 value);
-  event Approval(address indexed owner, address indexed spender, uint256 value);
+  // event Transfer(address indexed from, address indexed to, uint256 value);
+  // event Approval(address indexed owner, address indexed spender, uint256 value);
   event Bought(uint256 amount);
   event Sold(uint256 amount);
 
@@ -42,13 +43,19 @@ contract IMTToken is Ownable, Stakeable {
   * token_decimals = The decimal precision of the Token, defaults 18
   * _totalSupply is how much Tokens there are totally 
   */
-  constructor(string memory token_name, string memory short_symbol, uint8 token_decimals, uint256 token_totalSupply){
-      _name = token_name;
-      _symbol = short_symbol;
-      _decimals = token_decimals;
-      _totalSupply = token_totalSupply;
+  constructor(
+    // string memory token_name, string memory short_symbol, uint8 token_decimals, uint256 token_totalSupply
+    ){
+      // _name = token_name;
+      // _symbol = short_symbol;
+      // _decimals = token_decimals;
+      // _totalSupply = token_totalSupply;
+      _name = "IM Academy Token";
+      _symbol = "IMT";
+      _decimals = 8;
+      _totalSupply = 3500000000000000;
       // Add all the tokens created to the creator of the token
-      _balances[msg.sender] = _totalSupply;
+      _balances[msg.sender] = 3500000000000000;
 
       // Emit an Transfer event to notify the blockchain that an Transfer has occured
       emit Transfer(address(0), msg.sender, _totalSupply);
@@ -105,21 +112,25 @@ contract IMTToken is Ownable, Stakeable {
     }
 
     function approve(address delegate, uint256 numTokens) public  returns (bool) {
-        allowed[msg.sender][delegate] = numTokens;
+        _allowances[msg.sender][delegate] = numTokens;
         emit Approval(msg.sender, delegate, numTokens);
         return true;
     }
 
     function allowance(address owner, address delegate) public  view returns (uint) {
-        return allowed[owner][delegate];
+        return _allowances[owner][delegate];
+    }
+
+    function  getOwner() external view returns (address) {
+        return owner();
     }
 
     function transferFrom(address owner, address buyer, uint256 numTokens) public  returns (bool) {
         require(numTokens <= _balances[owner]);
-        require(numTokens <= allowed[owner][msg.sender]);
+        require(numTokens <= _allowances[owner][msg.sender]);
 
         _balances[owner] = _balances[owner] - numTokens;
-        allowed[owner][msg.sender] = allowed[owner][msg.sender] - numTokens;
+        _allowances[owner][msg.sender] = _allowances[owner][msg.sender] - numTokens;
         _balances[buyer] = _balances[buyer] + numTokens;
         emit Transfer(owner, buyer, numTokens);
         return true;
